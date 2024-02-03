@@ -1,5 +1,4 @@
 #include "GameWindow.h"
-#include "GameObject.h"
 #include <SFML/Graphics.hpp>
 
 using namespace sf;
@@ -39,10 +38,6 @@ float GameWindow::GetHeight() {
 |				Here are all the main methods									|
 ---------------------------------------------------------------------------------
 */
-
-void	GameWindow::DrawObject(GameObject* gameObject) {
-	w_window->draw(gameObject->o_sprite);
-}
 
 void	GameWindow::RefreshScreen() {
 	w_window->clear();

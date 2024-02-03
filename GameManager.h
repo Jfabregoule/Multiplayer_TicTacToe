@@ -16,6 +16,11 @@ private:
 	bool						m_running;
 
 	int							m_currentTurn;
+	int							m_currentPlayer;
+
+	sf::Clock					*m_Clock;
+	float						m_deltaTime;
+	float						m_fpsLimit;
 
 	// Textures
 
@@ -33,6 +38,7 @@ private:
 
 	void		SetIcon();
 	void		CloseWindow();
+	void		LimitFps(float fps);
 	void		DrawTerrain();
 	void		DrawBoard();
 	void		RefreshWindow();
@@ -41,6 +47,8 @@ private:
 	void		GenerateMap();
 	void		Generate();
 
+	void		Place();
+	void		EndCheck();
 	void		HandleEvents();
 };
 
