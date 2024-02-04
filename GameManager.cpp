@@ -4,11 +4,14 @@
 #include "GameManager.h"
 #include "GameWindow.h"
 
+const float INPUT_BLOCK_TIME = 0.8f;
+
 GameManager::GameManager() {
 
 	m_window = new GameWindow();
 	m_icon = new sf::Image();
 
+	m_endScreen = false;
 	m_menu = true;
 	m_running = true;
 
@@ -18,6 +21,7 @@ GameManager::GameManager() {
 	m_Clock = new sf::Clock();
 	m_deltaTime = 0.f;
 	m_fpsLimit = 1.0f / 120.0f;
+	m_timeChange = 0.0f;
 
 	m_music = new Music();
 
@@ -39,6 +43,11 @@ void GameManager::SetIcon() {
 	m_window->w_window->setIcon(m_icon->getSize().x, m_icon->getSize().y, m_icon->getPixelsPtr());
 }
 
+void	GameManager::Sleep() {
+	m_window->w_window->clear();
+	sf::sleep(sf::milliseconds(800));
+}
+
 void	GameManager::CloseWindow() {
 	m_music->stop();
 	delete m_music;
@@ -48,6 +57,7 @@ void	GameManager::CloseWindow() {
 
 void GameManager::LimitFps(float fps) {
 	m_deltaTime = m_Clock->restart().asSeconds();
+	m_timeChange += m_deltaTime;
 	if (m_deltaTime < m_fpsLimit) {
 		sleep(seconds(m_fpsLimit - m_deltaTime));
 		m_deltaTime += m_fpsLimit - m_deltaTime;
@@ -184,6 +194,178 @@ void	GameManager::PlayMusic(const char *path) {
 	m_music->setLoop(true);
 }
 
+/*
+---------------------------------------------------------------------------------
+|				Here are all the menu related methods							|
+---------------------------------------------------------------------------------
+*/
+
+void GameManager::ChooseMenu() {
+	sf::Vector2i	position = sf::Mouse::getPosition(*m_window->w_window);
+	sf::Vector2u	windowSize = m_window->w_window->getSize();
+
+	if (position.y <= windowSize.y / 2)
+		m_menu = false;
+	else if (position.y > windowSize.y / 2) {
+		m_menu = false;
+		m_running = false;
+	}
+}
+
+void GameManager::Menu() {
+	Event		event;
+	sf::Texture	menuBackgroundTexture;
+	sf::Sprite	menuBackgroundSprite;
+
+	if (!menuBackgroundTexture.loadFromFile("rsrc/img/menu/background.png")) {
+		std::cout << "Error loading menu background image" << std::endl;
+		exit(1);
+	}
+	menuBackgroundSprite.setTexture(menuBackgroundTexture);
+	SetIcon();
+	PlayMusic("rsrc/music/menu.ogg");
+
+	m_timeChange = 0.0f;
+	while (m_menu) {
+
+		while (m_window->w_window->pollEvent(event))
+		{
+			if (m_timeChange > INPUT_BLOCK_TIME) {
+				if (event.type == Event::Closed)
+					CloseWindow();
+
+				if (Mouse::isButtonPressed(Mouse::Button::Left) && m_window->w_window->hasFocus())
+					ChooseMenu();
+			}
+		}
+		m_window->w_window->draw(menuBackgroundSprite);
+		m_window->w_window->display();
+		LimitFps(60.0f);
+	}
+	RefreshWindow();
+	m_timeChange = 0.0f;
+}
+
+/*
+---------------------------------------------------------------------------------
+|					Here are all the end screens methods						|
+---------------------------------------------------------------------------------
+*/
+
+void GameManager::ChooseEnd() {
+	sf::Vector2i	position = sf::Mouse::getPosition(*m_window->w_window);
+	sf::Vector2u	windowSize = m_window->w_window->getSize();
+
+	if (position.y <= windowSize.y / 2){
+		m_menu = true;
+		m_endScreen = false;
+	}
+	else if (position.y > windowSize.y / 2) {
+		m_endScreen = false;
+		m_menu = false;
+		m_running = false;
+	}
+}
+
+void GameManager::Player1WinScreen() {
+	Event		event;
+	sf::Texture	player1BackgroundTexture;
+	sf::Sprite	player1BackgroundSprite;
+	
+	if (!player1BackgroundTexture.loadFromFile("rsrc/img/end/player1background.png")) {
+		std::cout << "Error loading player 1 win screen background image" << std::endl;
+		exit(1);
+	}
+	player1BackgroundSprite.setTexture(player1BackgroundTexture);
+	PlayMusic("rsrc/music/endscreens/player1win.ogg");
+
+	m_endScreen = true;
+	m_timeChange = 0.0f;
+	while (m_endScreen) {
+
+		while (m_window->w_window->pollEvent(event))
+		{
+			if (m_timeChange > INPUT_BLOCK_TIME)
+			{
+				if (event.type == Event::Closed)
+					CloseWindow();
+
+				if (Mouse::isButtonPressed(Mouse::Button::Left) && m_window->w_window->hasFocus())
+					ChooseEnd();
+			}	
+		}
+		m_window->w_window->draw(player1BackgroundSprite);
+		m_window->w_window->display();
+		LimitFps(60.0f);
+	}
+}
+
+void GameManager::Player2WinScreen() {
+	Event		event;
+	sf::Texture	player2BackgroundTexture;
+	sf::Sprite	player2BackgroundSprite;
+
+	if (!player2BackgroundTexture.loadFromFile("rsrc/img/end/player2background.png")) {
+		std::cout << "Error loading player 2 win screen background image" << std::endl;
+		exit(1);
+	}
+	player2BackgroundSprite.setTexture(player2BackgroundTexture);
+	PlayMusic("rsrc/music/endscreens/player2win.ogg");
+
+	m_endScreen = true;
+	m_timeChange = 0.0f;
+	while (m_endScreen) {
+
+		while (m_window->w_window->pollEvent(event))
+		{
+			if (event.type == Event::Closed)
+				CloseWindow();
+
+			if (Mouse::isButtonPressed(Mouse::Button::Left) && m_window->w_window->hasFocus())
+				ChooseEnd();
+		}
+		m_window->w_window->draw(player2BackgroundSprite);
+		m_window->w_window->display();
+		LimitFps(60.0f);
+	}
+}
+
+void GameManager::TieScreen() {
+	Event		event;
+	sf::Texture	tieBackgroundTexture;
+	sf::Sprite	tieBackgroundSprite;
+
+	if (!tieBackgroundTexture.loadFromFile("rsrc/img/end/tiebackground.png")) {
+		std::cout << "Error loading tie screen background image" << std::endl;
+		exit(1);
+	}
+	tieBackgroundSprite.setTexture(tieBackgroundTexture);
+	PlayMusic("rsrc/music/endscreens/tie.ogg");
+
+	m_endScreen = true;
+	m_timeChange = 0.0f;
+	while (m_endScreen) {
+
+		while (m_window->w_window->pollEvent(event))
+		{
+			if (event.type == Event::Closed)
+				CloseWindow();
+
+			if (Mouse::isButtonPressed(Mouse::Button::Left) && m_window->w_window->hasFocus())
+				ChooseEnd();
+		}
+		m_window->w_window->draw(tieBackgroundSprite);
+		m_window->w_window->display();
+		LimitFps(60.0f);
+	}
+}
+
+/*
+---------------------------------------------------------------------------------
+|						Here are all the main methods							|
+---------------------------------------------------------------------------------
+*/
+
 void GameManager::Place() {
 	char			c;
 	char			*toReplace = nullptr;
@@ -224,13 +406,11 @@ void GameManager::EndCheck() {
 	// Check rows
 	for (int i = 0; i < 3; i++) {
 		if (m_map[i][0] == 'x' && m_map[i][1] == 'x' && m_map[i][2] == 'x') {
-			m_menu = true;
-			std::cout << "Player 1 wins!" << std::endl;
+			Player1WinScreen();
 			return;
 		}
 		if (m_map[i][0] == '.' && m_map[i][1] == '.' && m_map[i][2] == '.') {
-			m_menu = true;
-			std::cout << "Player 2 wins!" << std::endl;
+			Player2WinScreen();
 			return;
 		}
 	}
@@ -238,13 +418,11 @@ void GameManager::EndCheck() {
 	// Check columns
 	for (int j = 0; j < 3; j++) {
 		if (m_map[0][j] == 'x' && m_map[1][j] == 'x' && m_map[2][j] == 'x') {
-			m_menu = true;
-			std::cout << "Player 1 wins!" << std::endl;
+			Player1WinScreen();
 			return;
 		}
 		if (m_map[0][j] == '.' && m_map[1][j] == '.' && m_map[2][j] == '.') {
-			m_menu = true;
-			std::cout << "Player 2 wins!" << std::endl;
+			Player2WinScreen();
 			return;
 		}
 	}
@@ -252,14 +430,12 @@ void GameManager::EndCheck() {
 	// Check diagonals
 	if ((m_map[0][0] == 'x' && m_map[1][1] == 'x' && m_map[2][2] == 'x') ||
 		(m_map[0][2] == 'x' && m_map[1][1] == 'x' && m_map[2][0] == 'x')) {
-		m_menu = true;
-		std::cout << "Player 1 wins!" << std::endl;
+		Player1WinScreen();
 		return;
 	}
 	if ((m_map[0][0] == '.' && m_map[1][1] == '.' && m_map[2][2] == '.') ||
 		(m_map[0][2] == '.' && m_map[1][1] == '.' && m_map[2][0] == '.')) {
-		m_menu = true;
-		std::cout << "Player 2 wins!" << std::endl;
+		Player2WinScreen();
 		return;
 	}
 
@@ -275,8 +451,7 @@ void GameManager::EndCheck() {
 	}
 
 	if (isTie) {
-		m_menu = true;
-		std::cout << "It's a tie!" << std::endl;
+		TieScreen();
 	}
 }
 
@@ -286,58 +461,18 @@ void GameManager::HandleEvents() {
 
 	while (m_window->w_window->pollEvent(event))
 	{
-		currentClickState = Mouse::isButtonPressed(Mouse::Button::Left);
-		if (event.type == Event::Closed)
-			CloseWindow();
-
-		if (currentClickState && !m_previousClickState && m_window->w_window->hasFocus())
-			Place();
-
-		m_previousClickState = currentClickState;
-	}
-}
-
-void GameManager::ChooseMenu() {
-	sf::Vector2i	position = sf::Mouse::getPosition(*m_window->w_window);
-	sf::Vector2u	windowSize = m_window->w_window->getSize();
-
-	if (position.y <= windowSize.y / 2)
-		m_menu = false;
-	else if (position.y > windowSize.y / 2){
-		m_menu = false;
-		m_running = false;
-	}
-}
-
-void GameManager::Menu() {
-	Event		event;
-	sf::Texture	menuBackgroundTexture;
-	sf::Sprite	menuBackgroundSprite;
-
-	if (!menuBackgroundTexture.loadFromFile("rsrc/img/menu/background.png")) {
-		std::cout << "Error loading menu background image" << std::endl;
-		exit(1);
-	}
-	menuBackgroundSprite.setTexture(menuBackgroundTexture);
-	SetIcon();
-	PlayMusic("rsrc/music/menu.ogg");
-
-	
-	while (m_menu) {
-
-		while (m_window->w_window->pollEvent(event))
+		if (m_timeChange > INPUT_BLOCK_TIME)
 		{
+			currentClickState = Mouse::isButtonPressed(Mouse::Button::Left);
 			if (event.type == Event::Closed)
 				CloseWindow();
 
-			if (Mouse::isButtonPressed(Mouse::Button::Left) && m_window->w_window->hasFocus())
-				ChooseMenu();
+			if (currentClickState && !m_previousClickState && m_window->w_window->hasFocus())
+				Place();
+
+			m_previousClickState = currentClickState;
 		}
-		m_window->w_window->draw(menuBackgroundSprite);
-		m_window->w_window->display();
-		LimitFps(60.0f);
 	}
-	RefreshWindow();
 }
 
 void GameManager::Start() {
@@ -346,7 +481,6 @@ void GameManager::Start() {
 	Generate();
 	Menu();
 	PlayMusic("rsrc/music/theme.ogg");
-	sf::sleep(sf::milliseconds(300));
 	while (m_running)
 	{
 		RefreshWindow();
@@ -355,13 +489,17 @@ void GameManager::Start() {
 		LimitFps(fps);
 		if (m_menu) {
 			Generate();
-			sf::sleep(sf::milliseconds(300));
 			Menu();
 			PlayMusic("rsrc/music/theme.ogg");
-			sf::sleep(sf::milliseconds(300));
 		}
 	}
 }
+
+/*
+---------------------------------------------------------------------------------
+|						Here is the constructor methods							|
+---------------------------------------------------------------------------------
+*/
 
 GameManager::~GameManager() {
 	delete m_window;
