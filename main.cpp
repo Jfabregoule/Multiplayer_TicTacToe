@@ -8,8 +8,6 @@ int main()
 {
     GameManager        game;
 
-    //game.Menu();
-    //sf::sleep(sf::milliseconds(200));
     game.Start();
     return 0;
 }

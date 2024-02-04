@@ -2,6 +2,8 @@
 
 class GameWindow;
 
+#include <SFML/Audio/Music.hpp>
+
 class GameManager
 {
 
@@ -13,6 +15,7 @@ private:
 	sf::Image					*m_icon;
 	char						m_map[3][4];
 
+	bool						m_menu;
 	bool						m_running;
 
 	int							m_currentTurn;
@@ -22,6 +25,10 @@ private:
 	float						m_deltaTime;
 	float						m_fpsLimit;
 
+	sf::Music*					m_music;
+
+	bool						m_previousClickState;
+
 	// Textures
 
 	std::vector<sf::Sprite*>	m_sprites;
@@ -29,6 +36,7 @@ private:
 public:
 
 	GameManager();
+	~GameManager();
 
 	// Called in main
 
@@ -47,8 +55,13 @@ private:
 	void		GenerateMap();
 	void		Generate();
 
+	// Music related
+	void		PlayMusic(const char *path);
+
 	void		Place();
 	void		EndCheck();
 	void		HandleEvents();
+	void		ChooseMenu();
+	void		Menu();
 };
 
