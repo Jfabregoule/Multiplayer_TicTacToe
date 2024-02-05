@@ -147,6 +147,9 @@
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="GameWindow.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="data.json" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

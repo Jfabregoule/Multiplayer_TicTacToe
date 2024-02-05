@@ -89,5 +89,5 @@ private:
 	void		Place();
 	void		EndCheck();
 	void		HandleEvents();
+	char* extractJsonContent(const std::string& filePath, const std::string& jsonPath);
 };
-

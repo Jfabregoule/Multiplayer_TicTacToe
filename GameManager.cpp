@@ -1,9 +1,12 @@
 #include <iostream>
+#include <fstream>
 #include <SFML/Graphics.hpp>
 
 #include "GameManager.h"
 #include "GameWindow.h"
+#include "nlohmann/json.hpp"
 
+using json = nlohmann::json;
 const float INPUT_BLOCK_TIME = 0.8f;
 
 GameManager::GameManager() {
@@ -493,6 +496,45 @@ void GameManager::Start() {
 			PlayMusic("rsrc/music/theme.ogg");
 		}
 	}
+
+}
+
+char* GameManager::extractJsonContent(const std::string& filePath, const std::string& jsonPath) {
+	// Charger le fichier JSON
+	std::ifstream jsonFile(filePath);
+	if (!jsonFile.is_open()) {
+		std::cerr << "Erreur : Impossible d'ouvrir le fichier JSON." << std::endl;
+		return nullptr;
+	}
+
+	json jsonData;
+	try {
+		jsonFile >> jsonData;
+	}
+	catch (json::parse_error& e) {
+		std::cerr << "Erreur lors de la lecture du fichier JSON : " << e.what() << std::endl;
+		return nullptr;
+	}
+
+	// Extraire le contenu JSON selon le chemin spécifié
+	json extractedData;
+	try {
+		extractedData = jsonData.at(jsonPath);
+	}
+	catch (json::out_of_range& e) {
+		std::cerr << "Erreur : Le chemin JSON spécifié n'a pas été trouvé." << std::endl;
+		return nullptr;
+	}
+
+	// Convertir le contenu extrait en une chaîne de caractères char*
+	std::string jsonString = extractedData.dump();
+	char* charString = new char[jsonString.size() + 1];
+	::strcpy_s(charString, jsonString.size() + 1, jsonString.c_str());
+
+	// Fermer le fichier JSON
+	jsonFile.close();
+
+	return charString;
 }
 
 /*
