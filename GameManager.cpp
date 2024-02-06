@@ -4,9 +4,8 @@
 
 #include "GameManager.h"
 #include "GameWindow.h"
-#include "nlohmann/json.hpp"
+#include <json/json.h>
 
-using json = nlohmann::json;
 const float INPUT_BLOCK_TIME = 0.8f;
 
 GameManager::GameManager() {
@@ -463,7 +462,7 @@ void GameManager::HandleEvents() {
 	bool	currentClickState;
 
 	while (m_window->w_window->pollEvent(event))
-	{
+	{ 
 		if (m_timeChange > INPUT_BLOCK_TIME)
 		{
 			currentClickState = Mouse::isButtonPressed(Mouse::Button::Left);
@@ -471,8 +470,25 @@ void GameManager::HandleEvents() {
 				CloseWindow();
 
 			if (currentClickState && !m_previousClickState && m_window->w_window->hasFocus())
-				Place();
+				if (m_currentPlayer == 1)
+				{
+					Place();
+				}
 
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1)) {
+
+				Json::Value jsonData;
+				jsonData["name"] = "John Doe";
+				jsonData["age"] = 30;
+				jsonData["city"] = "Example City";
+			}
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2)) {
+				if (m_currentPlayer == 2)
+				{
+					m_currentPlayer = 1;
+					m_map[2][0] = '.';
+				}
+			}
 			m_previousClickState = currentClickState;
 		}
 	}
@@ -496,45 +512,34 @@ void GameManager::Start() {
 			PlayMusic("rsrc/music/theme.ogg");
 		}
 	}
+	// Création d'un objet JSON simple
+	Json::Value jsonData;
+	jsonData["name"] = "John Doe";
+	jsonData["age"] = 30;
+	jsonData["city"] = "Example City";
+
+	// Utilisation de la fonction convertJsonToString
+	std::string jsonString = convertJsonToString(jsonData);
+
+	// Affichage du résultat
+	std::cout << "JSON en format string :\n" << jsonString << std::endl;
 
 }
 
-char* GameManager::extractJsonContent(const std::string& filePath, const std::string& jsonPath) {
-	// Charger le fichier JSON
-	std::ifstream jsonFile(filePath);
-	if (!jsonFile.is_open()) {
-		std::cerr << "Erreur : Impossible d'ouvrir le fichier JSON." << std::endl;
-		return nullptr;
-	}
 
-	json jsonData;
-	try {
-		jsonFile >> jsonData;
-	}
-	catch (json::parse_error& e) {
-		std::cerr << "Erreur lors de la lecture du fichier JSON : " << e.what() << std::endl;
-		return nullptr;
-	}
+/*
+---------------------------------------------------------------------------------
+|						Here is the Multiplayers methods						|
+---------------------------------------------------------------------------------
+*/
 
-	// Extraire le contenu JSON selon le chemin spécifié
-	json extractedData;
-	try {
-		extractedData = jsonData.at(jsonPath);
-	}
-	catch (json::out_of_range& e) {
-		std::cerr << "Erreur : Le chemin JSON spécifié n'a pas été trouvé." << std::endl;
-		return nullptr;
-	}
+std::string GameManager::convertJsonToString(const Json::Value& json) {
 
-	// Convertir le contenu extrait en une chaîne de caractères char*
-	std::string jsonString = extractedData.dump();
-	char* charString = new char[jsonString.size() + 1];
-	::strcpy_s(charString, jsonString.size() + 1, jsonString.c_str());
-
-	// Fermer le fichier JSON
-	jsonFile.close();
-
-	return charString;
+	Json::StreamWriterBuilder builder;
+	std::ostringstream os;
+	std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
+	writer->write(json, &os);
+	return os.str();
 }
 
 /*

@@ -3,6 +3,7 @@
 class GameWindow;
 
 #include <SFML/Audio/Music.hpp>
+#include <json/json.h>
 
 class GameManager
 {
@@ -89,5 +90,7 @@ private:
 	void		Place();
 	void		EndCheck();
 	void		HandleEvents();
-	char* extractJsonContent(const std::string& filePath, const std::string& jsonPath);
+
+	// Multiplayer Methods
+	std::string convertJsonToString(const Json::Value& json);
 };
