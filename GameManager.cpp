@@ -368,11 +368,13 @@ void GameManager::TieScreen() {
 ---------------------------------------------------------------------------------
 */
 
-void GameManager::Place() {
+Json::Value GameManager::Place() {
 	char			c;
+	char			test;
 	char			*toReplace = nullptr;
 	sf::Vector2i	position = sf::Mouse::getPosition(*m_window->w_window);
 	sf::Vector2u	windowSize = m_window->w_window->getSize();
+	Json::Value		json;
 
 	int i = -1, j = -1;
 	if (m_currentPlayer == 1)
@@ -394,6 +396,13 @@ void GameManager::Place() {
 		i = 2;
 
 	if (i != -1 && j != -1 && m_map[i][j] == '0') {
+		test = m_map[i][j];
+		test = c;
+
+		json["grill_row_0"] = m_map[0];
+		json["grill_row_1"] = m_map[1];
+		json["grill_row_2"] = m_map[2];
+
 		toReplace = &m_map[i][j];
 		*toReplace = c;
 
@@ -401,6 +410,8 @@ void GameManager::Place() {
 			m_currentPlayer = 2;
 		else
 			m_currentPlayer = 1;
+
+		return json;
 	}
 }
 
@@ -478,15 +489,18 @@ void GameManager::HandleEvents() {
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1)) {
 
 				Json::Value jsonData;
-				jsonData["name"] = "John Doe";
-				jsonData["age"] = 30;
-				jsonData["city"] = "Example City";
+				jsonData["grill_row_0"] = "...\0";
+				jsonData["grill_row_1"] = "...\0";
+				jsonData["grill_row_2"] = "...\0";
+
+				m_map[0][0] = convertJsonToString(jsonData, "grill_row_0");
+
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2)) {
 				if (m_currentPlayer == 2)
 				{
 					m_currentPlayer = 1;
-					m_map[2][0] = '.';
+					m_map[2][1] = '.';
 				}
 			}
 			m_previousClickState = currentClickState;
@@ -512,18 +526,6 @@ void GameManager::Start() {
 			PlayMusic("rsrc/music/theme.ogg");
 		}
 	}
-	// Création d'un objet JSON simple
-	Json::Value jsonData;
-	jsonData["name"] = "John Doe";
-	jsonData["age"] = 30;
-	jsonData["city"] = "Example City";
-
-	// Utilisation de la fonction convertJsonToString
-	std::string jsonString = convertJsonToString(jsonData);
-
-	// Affichage du résultat
-	std::cout << "JSON en format string :\n" << jsonString << std::endl;
-
 }
 
 
@@ -533,13 +535,31 @@ void GameManager::Start() {
 ---------------------------------------------------------------------------------
 */
 
-std::string GameManager::convertJsonToString(const Json::Value& json) {
-
+char* GameManager::convertJsonToString(const Json::Value& json, std::string key) {
 	Json::StreamWriterBuilder builder;
 	std::ostringstream os;
 	std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
-	writer->write(json, &os);
-	return os.str();
+	writer->write(json[key], &os);
+	std::string jsonString = os.str();
+
+	// Allouer de la mémoire pour le tableau de caractères (char*)
+	char* charString = new char[jsonString.size() + 1];
+
+	// Copier le contenu de la chaîne dans le tableau de caractères
+	std::strcpy(charString, jsonString.c_str());
+
+	return charString;
+}
+
+void GameManager::convertJsonToMap(Json::Value& json) {
+	char* charRow0 = convertJsonToString(json, "grill_row_0");
+	char* charRow1 = convertJsonToString(json, "grill_row_1");
+	char* charRow2 = convertJsonToString(json, "grill_row_2");
+
+	for (int i = 0; i < 4; i++)
+	{
+		charRow0[i]
+	}
 }
 
 /*

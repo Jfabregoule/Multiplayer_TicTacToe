@@ -87,10 +87,11 @@ private:
 
 	// Main methods
 
-	void		Place();
+	Json::Value	Place();
 	void		EndCheck();
 	void		HandleEvents();
 
 	// Multiplayer Methods
-	std::string convertJsonToString(const Json::Value& json);
+	char* convertJsonToString(const Json::Value& json, std::string key);
+	void convertJsonToMap(Json::Value& json);
 };
