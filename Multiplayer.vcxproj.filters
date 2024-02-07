@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="ThirdParties">
+      <UniqueIdentifier>{29fe4709-c362-49ad-bec2-f9ac34647bea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -23,6 +26,15 @@
     </ClCompile>
     <ClCompile Include="GameWindow.cpp">
       <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\jsoncpp-1.9.5\src\lib_json\json_value.cpp">
+      <Filter>ThirdParties</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\jsoncpp-1.9.5\src\lib_json\json_writer.cpp">
+      <Filter>ThirdParties</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\jsoncpp-1.9.5\src\lib_json\json_reader.cpp">
+      <Filter>ThirdParties</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

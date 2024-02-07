@@ -294,7 +294,7 @@ void GameManager::Player1WinScreen() {
 
 				if (Mouse::isButtonPressed(Mouse::Button::Left) && m_window->w_window->hasFocus())
 					ChooseEnd();
-			}	
+			}
 		}
 		m_window->w_window->draw(player1BackgroundSprite);
 		m_window->w_window->display();
@@ -487,13 +487,17 @@ void GameManager::HandleEvents() {
 				}
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1)) {
+				if (m_currentPlayer == 2)
+				{
+					m_currentPlayer = 1;
+					Json::Value jsonData;
+					jsonData["grill_row_0"] = "000\0";
+					jsonData["grill_row_1"] = "0.0\0";
+					jsonData["grill_row_2"] = "000\0";
 
-				Json::Value jsonData;
-				jsonData["grill_row_0"] = "...\0";
-				jsonData["grill_row_1"] = "...\0";
-				jsonData["grill_row_2"] = "...\0";
-
-				m_map[0][0] = convertJsonToString(jsonData, "grill_row_0");
+					convertJsonToMap(jsonData);
+				}
+				
 
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2)) {
@@ -546,7 +550,7 @@ char* GameManager::convertJsonToString(const Json::Value& json, std::string key)
 	char* charString = new char[jsonString.size() + 1];
 
 	// Copier le contenu de la chaîne dans le tableau de caractères
-	std::strcpy(charString, jsonString.c_str());
+	strcpy_s(charString, jsonString.size() + 1, jsonString.substr(1, jsonString.length() - 2).c_str());
 
 	return charString;
 }
@@ -555,10 +559,14 @@ void GameManager::convertJsonToMap(Json::Value& json) {
 	char* charRow0 = convertJsonToString(json, "grill_row_0");
 	char* charRow1 = convertJsonToString(json, "grill_row_1");
 	char* charRow2 = convertJsonToString(json, "grill_row_2");
-
+	std::cout << charRow0;
+	std::cout << charRow1;
+	std::cout << charRow2;
 	for (int i = 0; i < 4; i++)
 	{
-		charRow0[i]
+		m_map[0][i] = charRow0[i];
+		m_map[1][i] = charRow1[i];
+		m_map[2][i] = charRow2[i];
 	}
 }
 
