@@ -17,8 +17,13 @@ GameManager::GameManager() {
 	m_menu = true;
 	m_running = true;
 
+	m_choiceScreen = false;
+
 	m_currentTurn = 0;
 	m_currentPlayer = 1;
+
+	m_playerNumberSelf = -1;
+	m_playerNumberEnemy = -1;
 
 	m_Clock = new sf::Clock();
 	m_deltaTime = 0.f;
@@ -207,7 +212,7 @@ void GameManager::ChooseMenu() {
 	sf::Vector2u	windowSize = m_window->w_window->getSize();
 
 	if (position.y <= windowSize.y / 2)
-		m_menu = false;
+		ChoicePlayerScreen();
 	else if (position.y > windowSize.y / 2) {
 		m_menu = false;
 		m_running = false;
@@ -261,6 +266,9 @@ void GameManager::ChooseEnd() {
 	if (position.y <= windowSize.y / 2){
 		m_menu = true;
 		m_endScreen = false;
+
+		m_playerNumberSelf = -1;
+		m_playerNumberEnemy = -1;
 	}
 	else if (position.y > windowSize.y / 2) {
 		m_endScreen = false;
@@ -377,7 +385,7 @@ Json::Value GameManager::Place() {
 	Json::Value		json;
 
 	int i = -1, j = -1;
-	if (m_currentPlayer == 1)
+	if (m_currentPlayer == m_playerNumberSelf)
 		c = 'x';
 	else
 		c = '.';
@@ -406,10 +414,10 @@ Json::Value GameManager::Place() {
 		toReplace = &m_map[i][j];
 		*toReplace = c;
 
-		if (m_currentPlayer == 1)
-			m_currentPlayer = 2;
+		if (m_currentPlayer == m_playerNumberSelf)
+			m_currentPlayer = m_playerNumberEnemy;
 		else
-			m_currentPlayer = 1;
+			m_currentPlayer = m_playerNumberSelf;
 
 		return json;
 	}
@@ -481,29 +489,37 @@ void GameManager::HandleEvents() {
 				CloseWindow();
 
 			if (currentClickState && !m_previousClickState && m_window->w_window->hasFocus())
-				if (m_currentPlayer == 1)
+				if (m_currentPlayer == m_playerNumberSelf)
 				{
 					Place();
 				}
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad1)) {
-				if (m_currentPlayer == 2)
+				if (m_currentPlayer == m_playerNumberEnemy)
 				{
-					m_currentPlayer = 1;
-					Json::Value jsonData;
-					jsonData["grill_row_0"] = "000\0";
-					jsonData["grill_row_1"] = "0.0\0";
-					jsonData["grill_row_2"] = "000\0";
+					m_currentPlayer = m_playerNumberSelf;
 
+					//simulation de la réception du string
+					std::string jsonString = R"({
+						"grill_row_0": "000",
+						"grill_row_1": "0.0",
+						"grill_row_2": "000"
+					})";
+
+					Json::Value jsonData;
+
+					//convertion du string en Json
+					jsonData = convertStringToJson(jsonString);
+
+					//convertion du json en map pour l'intégrer au jeu
 					convertJsonToMap(jsonData);
 				}
-				
 
 			}
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Numpad2)) {
-				if (m_currentPlayer == 2)
+				if (m_currentPlayer == m_playerNumberEnemy)
 				{
-					m_currentPlayer = 1;
+					m_currentPlayer = m_playerNumberSelf;
 					m_map[2][1] = '.';
 				}
 			}
@@ -518,6 +534,7 @@ void GameManager::Start() {
 	Generate();
 	Menu();
 	PlayMusic("rsrc/music/theme.ogg");
+
 	while (m_running)
 	{
 		RefreshWindow();
@@ -555,19 +572,105 @@ char* GameManager::convertJsonToString(const Json::Value& json, std::string key)
 	return charString;
 }
 
+Json::Value GameManager::convertStringToJson(const std::string& jsonString) {
+	Json::CharReaderBuilder readerBuilder;
+	Json::Value jsonValue;
+
+	std::istringstream jsonStream(jsonString);
+	Json::parseFromStream(readerBuilder, jsonStream, &jsonValue, nullptr);
+
+	return jsonValue;
+}
+
 void GameManager::convertJsonToMap(Json::Value& json) {
 	char* charRow0 = convertJsonToString(json, "grill_row_0");
 	char* charRow1 = convertJsonToString(json, "grill_row_1");
 	char* charRow2 = convertJsonToString(json, "grill_row_2");
-	std::cout << charRow0;
-	std::cout << charRow1;
-	std::cout << charRow2;
+
 	for (int i = 0; i < 4; i++)
 	{
 		m_map[0][i] = charRow0[i];
 		m_map[1][i] = charRow1[i];
 		m_map[2][i] = charRow2[i];
 	}
+}
+
+void GameManager::ChoosePlayer() {
+	sf::Vector2i	position = sf::Mouse::getPosition(*m_window->w_window);
+	sf::Vector2u	windowSize = m_window->w_window->getSize();
+
+	if (position.y <= windowSize.y / 2) {
+		if (PlayerVerification(1))
+		{
+			m_menu = false;
+			m_choiceScreen = false;
+		}
+	}
+	else if (position.y > windowSize.y / 2) {
+		if (PlayerVerification(2))
+		{
+			m_menu = false;
+			m_choiceScreen = false;
+		}
+	}
+}
+
+void GameManager::ChoicePlayerScreen() {
+	Event		event;
+	sf::Texture	choiceBackgroundTexture;
+	sf::Sprite	choiceBackgroundSprite;
+
+	if (!choiceBackgroundTexture.loadFromFile("rsrc/img/playerChoice/choiceBackground.png")) {
+		std::cout << "Error loading choice player screen background image" << std::endl;
+		exit(1);
+	}
+	choiceBackgroundSprite.setTexture(choiceBackgroundTexture);
+	//PlayMusic("rsrc/music/endscreens/player1win.ogg");
+
+	m_choiceScreen = true;
+	m_timeChange = 0.0f;
+	//m_timeChange = 0.0f;
+	while (m_choiceScreen) {
+
+		while (m_window->w_window->pollEvent(event))
+		{
+			if (m_timeChange > INPUT_BLOCK_TIME)
+			{
+				if (event.type == Event::Closed)
+					CloseWindow();
+
+				if (Mouse::isButtonPressed(Mouse::Button::Left) && m_window->w_window->hasFocus())
+					ChoosePlayer();
+			}
+		}
+		m_window->w_window->draw(choiceBackgroundSprite);
+		m_window->w_window->display();
+		LimitFps(60.0f);
+	}
+}
+
+bool GameManager::PlayerVerification(int playerNumber) {
+	if (m_playerNumberEnemy == -1) {
+		m_playerNumberSelf = playerNumber;
+
+		if (playerNumber == 1) {
+			m_playerNumberEnemy = 2;
+		}
+		else {
+			m_playerNumberEnemy = 1;
+		}
+
+		return true;
+	}
+	else if (m_playerNumberEnemy == 1 && playerNumber == 2){
+		m_playerNumberSelf = 2;
+		return true;
+	}
+	else if (m_playerNumberEnemy == 2 && playerNumber == 1) {
+		m_playerNumberSelf = 1;
+		return true;
+	}
+	return false;
 }
 
 /*

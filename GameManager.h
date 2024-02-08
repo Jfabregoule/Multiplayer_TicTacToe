@@ -26,6 +26,10 @@ private:
 
 	bool						m_menu;
 	bool						m_endScreen;
+	bool						m_choiceScreen;
+
+	int							m_playerNumberSelf;
+	int							m_playerNumberEnemy;
 
 	sf::Music* m_music;
 
@@ -92,6 +96,10 @@ private:
 	void		HandleEvents();
 
 	// Multiplayer Methods
-	char* convertJsonToString(const Json::Value& json, std::string key);
-	void convertJsonToMap(Json::Value& json);
+	char*		convertJsonToString(const Json::Value& json, std::string key);
+	Json::Value convertStringToJson(const std::string& jsonString);
+	void		convertJsonToMap(Json::Value& json);
+	void		ChoicePlayerScreen();
+	void		ChoosePlayer();
+	bool		PlayerVerification(int playerNumber);
 };
