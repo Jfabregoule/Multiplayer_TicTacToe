@@ -14,9 +14,9 @@ GameManager::GameManager() {
 	m_icon = new sf::Image();
 
 	m_endScreen = false;
-	m_menu = true;
+	m_menu = false;
 	m_running = true;
-
+	m_username = true;
 	m_choiceScreen = false;
 
 	m_currentTurn = 0;
@@ -24,6 +24,11 @@ GameManager::GameManager() {
 
 	m_playerNumberSelf = -1;
 	m_playerNumberEnemy = -1;
+	
+	m_playerSpectator = false;
+
+
+	username = "";
 
 	m_Clock = new sf::Clock();
 	m_deltaTime = 0.f;
@@ -33,6 +38,11 @@ GameManager::GameManager() {
 	m_music = new Music();
 
 	m_previousClickState = false;
+
+
+	if (!font.loadFromFile("rsrc/font/Caveat-Regular.ttf")) {
+		std::cerr << "Erreur lors du chargement de la police" << std::endl;
+	}
 }
 
 /*
@@ -132,6 +142,17 @@ void GameManager::DrawBoard() {
 	}
 }
 
+void GameManager::DrawText() {
+	if (m_username) {
+		m_window->w_window->draw(m_textList[0]);
+		m_window->w_window->draw(m_textList[1]);
+	}
+	else if (m_menu) {
+		m_window->w_window->draw(m_textList[2]);
+		m_window->w_window->draw(m_textList[3]);
+	}
+}
+
 void GameManager::RefreshWindow() {
 	m_window->RefreshScreen();
 	DrawTerrain();
@@ -162,6 +183,26 @@ void GameManager::GenerateSprites() {
 	m_sprites.push_back(circleSprite);
 }
 
+void GameManager::GenerateText() {
+	sf::Text textInstruction("Entrez votre nom d'utilisateur :", font, 30);
+	textInstruction.setPosition(50, 50);
+
+	sf::Text textUsername("", font, 30);
+	textUsername.setPosition(50, 80);
+
+	sf::Text score("", font, 20);
+	score.setPosition(10, 10);
+
+	sf::Text textScore("Score :", font, 20);
+	textScore.setPosition(10, 10);
+
+
+	m_textList.push_back(textInstruction);
+	m_textList.push_back(textUsername);
+	m_textList.push_back(score);
+	m_textList.push_back(textScore);
+}
+
 void GameManager::GenerateMap() {
 	int	j = 0;
 
@@ -180,6 +221,7 @@ void GameManager::Generate() {
 	if (m_sprites.empty())
 		GenerateSprites();
 	GenerateMap();
+	GenerateText();
 
 	//GenerateHud();
 }
@@ -212,7 +254,16 @@ void GameManager::ChooseMenu() {
 	sf::Vector2u	windowSize = m_window->w_window->getSize();
 
 	if (position.y <= windowSize.y / 2)
-		ChoicePlayerScreen();
+	{
+		if (m_playerSpectator)
+		{
+			m_menu = false;
+			m_choiceScreen = false;
+		}
+		else {
+			ChoicePlayerScreen();
+		}
+	}
 	else if (position.y > windowSize.y / 2) {
 		m_menu = false;
 		m_running = false;
@@ -532,7 +583,8 @@ void GameManager::Start() {
 	float	fps = 0;
 
 	Generate();
-	Menu();
+	enterNameScreen();
+	//Menu();
 	PlayMusic("rsrc/music/theme.ogg");
 
 	while (m_running)
@@ -541,9 +593,10 @@ void GameManager::Start() {
 		HandleEvents();
 		EndCheck();
 		LimitFps(fps);
-		if (m_menu) {
+		if (m_username) {
 			Generate();
-			Menu();
+			enterNameScreen();
+			//Menu();
 			PlayMusic("rsrc/music/theme.ogg");
 		}
 	}
@@ -612,6 +665,54 @@ void GameManager::ChoosePlayer() {
 			m_menu = false;
 			m_choiceScreen = false;
 		}
+	}
+}
+
+void GameManager::enterNameScreen() {
+	Event		event;
+	sf::Texture	menuBackgroundTexture;
+	sf::Sprite	menuBackgroundSprite;
+
+	if (!menuBackgroundTexture.loadFromFile("rsrc/img/menu/background.png")) {
+		std::cout << "Error loading menu background image" << std::endl;
+		exit(1);
+	}
+
+	menuBackgroundSprite.setTexture(menuBackgroundTexture);
+	while (m_username) {
+		while (m_window->w_window->pollEvent(event))
+		{
+			if (m_timeChange > INPUT_BLOCK_TIME)
+			{
+				if (event.type == Event::Closed)
+					CloseWindow();
+
+				if (event.type == sf::Event::TextEntered) {
+					if (event.text.unicode < 128) {
+						char enteredChar = static_cast<char>(event.text.unicode);
+						if (enteredChar == '\b' && !username.empty()) {
+							// Backspace : supprimer le dernier caractère
+							username.pop_back();
+						}
+						else if (enteredChar != '\b') {
+							// Ajouter le caractère à la chaîne du nom d'utilisateur
+							username += enteredChar;
+						}
+						// Mettre à jour le texte affiché
+						m_textList[1].setString(username);
+					}
+				}
+				if (event.key.code == sf::Keyboard::Enter) {
+					m_username = false;
+					m_menu = true;
+					Menu();
+				}
+			}
+		}
+		m_window->w_window->draw(menuBackgroundSprite);
+		DrawText();
+		m_window->w_window->display();
+		LimitFps(60.0f);
 	}
 }
 
